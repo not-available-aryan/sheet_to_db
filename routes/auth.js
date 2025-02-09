@@ -1,5 +1,7 @@
 const express = require('express');
 const passport = require('passport');
+const jwt = require('jsonwebtoken')
+require ('dotenv').config();
 const router = express.Router();
 
 // Google OAuth
@@ -9,16 +11,23 @@ router.get(
   '/google/callback',
   passport.authenticate('google', { failureRedirect: '/' }),
   (req, res) => {
-    res.send('Login Successful');
-  }
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication failed" });
+    }
+    const token = jwt.sign(
+      { userId: req.user._id, email: req.user.email }, // Payload
+      process.env.JWT_SECRET, // Secret key
+      { expiresIn: "1h" } // Expiration time
+    );
+    res.cookie('token', token, { httpOnly: true, secure: true });
+    res.json({ message: "Login Successful" });
+    }
 );
 
 // Logout
-router.get('/logout', (req, res) => {
-  req.logout((err) => {
-    if (err) return res.status(500).send('Logout Failed');
-    res.send('Logged out');
-  });
+router.post('/logout', (req, res) => {
+  res.clearCookie("jwt"); // Remove JWT cookie
+  res.json({ message: "Logged out successfully" });
 });
 
 // Get user profile

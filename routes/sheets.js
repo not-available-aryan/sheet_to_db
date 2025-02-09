@@ -2,6 +2,7 @@ const express = require('express');
 const { fetchSheetData, fetchAllFormsData } = require('../config/googleSheets');
 const FormData = require('../models/FormData');
 const User = require('../models/User');
+const authenticateUser = require("../middleware/authMiddleware");
 const router = express.Router();
 require('dotenv').config();
 
@@ -63,50 +64,23 @@ router.post('/syncAll', async (req, res) => {
   }
 });
 
+router.get("/fetchData", authenticateUser, async (req, res) => {
+  try {
+    const userEmail = req.user.email; // Get email from JWT payload
 
-// router.post('/syncAll', async (req, res) => {
-//   try {
-//     const allFormsData = await fetchAllFormsData();
+    console.log(`Fetching form data for user: ${userEmail}`);
+    const formData = await FormData.find({ "formData.email": userEmail }); // Find user's form submissions
 
-//     const syncedData = [];
+    if (!formData || formData.length === 0) {
+      return res.status(404).json({ message: "No form data found for this user" });
+    }
 
-//     for (let formIndex = 0; formIndex < allFormsData.length; formIndex++) {
-//       const formData = allFormsData[formIndex];
-
-//       if (!formData || formData.length === 0) continue;
-
-//       const headers = formData[0]; // Extract headers
-//       const dataRows = formData.slice(1); // Rows
-
-//       for (const row of dataRows) {
-//         const formEntry = {};
-//         headers.forEach((header, index) => {
-//           formEntry[header] = row[index] || null;
-//         });
-
-//         const email = formEntry.Email; // Adjust based on actual header
-//         if (!email) continue;
-
-//         const user = await User.findOne({ email });
-//         if (!user) continue;
-
-//         // Save form data to the database
-//         const dataEntry = await FormData.create({
-//           userId: user._id,
-//           formType: `Form${formIndex + 1}`, // Tag with form type
-//           formData: formEntry,
-//         });
-
-//         syncedData.push(dataEntry);
-//       }
-//     }
-
-//     res.send({ message: 'Data synced successfully for all forms', syncedData });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).send('Failed to sync data');
-//   }
-// });
+    res.json(formData);
+  } catch (err) {
+    console.error("❌ Error fetching form data:", err);
+    res.status(500).json({ message: "Failed to fetch form data" });
+  }
+});
 
 
 module.exports = router;
