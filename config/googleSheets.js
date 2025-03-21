@@ -1,5 +1,6 @@
 const { google } = require('googleapis');
 const credentials = require('../credentials/service-account.json');
+const LastProcessedRow = require('../models/LastProcessedRow');
 
 const sheets = google.sheets('v4');
 const auth = new google.auth.GoogleAuth({
@@ -69,6 +70,17 @@ const fetchAllFormsData = async () => {
 };
 
 
+
+module.exports = { fetchSheetData, fetchAllFormsData, getAuthClient };
+
+
+
+
+
+
+
+
+
 // const fetchAllFormsData = async () => {
 //   console.log("Fetching data from all Google Sheets...");
 //   console.log("FORM_SHEETS data:", FORM_SHEETS); // Check if FORM_SHEETS is populated
@@ -135,5 +147,43 @@ const fetchAllFormsData = async () => {
 //   return formsData;
 // };
 
-module.exports = { fetchSheetData, fetchAllFormsData, getAuthClient };
+// async function fetchLatestFormData(formType) {
+//   try {
+//     // Get last processed row for the given form type
+//     let lastProcessed = await LastProcessedRow.findOne({ formType });
+//     let lastRow = lastProcessed ? lastProcessed.lastRow : 1; // Default to 1 if no record exists
 
+//     // Fetch all data from Google Sheets
+//     const response = await sheets.spreadsheets.values.get({
+//       spreadsheetId: SPREADSHEET_ID,
+//       range: RANGE,
+//     });
+
+//     const rows = response.data.values;
+//     if (!rows || rows.length <= lastRow) {
+//       return []; // No new data available
+//     }
+
+//     const headers = rows[0]; // First row is the header
+//     const newRows = rows.slice(lastRow + 1); // Get new rows only
+
+//     // Update the last processed row in MongoDB
+//     await LastProcessedRow.findOneAndUpdate(
+//       { formType },
+//       { lastRow: rows.length - 1 }, // Store the latest row number
+//       { upsert: true, new: true }
+//     );
+
+//     // Convert new rows to JSON format
+//     return newRows.map((row) => {
+//       let formData = {};
+//       headers.forEach((header, index) => {
+//         formData[header] = row[index] || null;
+//       });
+//       return { formType, formData };
+//     });
+//   } catch (error) {
+//     console.error("Error fetching latest form data:", error);
+//     return [];
+//   }
+// }
