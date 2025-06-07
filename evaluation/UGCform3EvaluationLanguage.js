@@ -107,3 +107,5 @@ function evaluateUGCForm3Language(response) {
     totalScore
   };
 }
+
+module.exports = { evaluateUGCForm3Language };

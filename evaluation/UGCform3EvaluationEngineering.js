@@ -103,3 +103,5 @@ function evaluateUGCForm3Engineering(response) {
     totalScore
   };
 }
+
+module.exports = { evaluateUGCForm3Engineering };
